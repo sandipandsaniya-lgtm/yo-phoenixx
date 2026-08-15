@@ -73,10 +73,6 @@ function launchBot() {
 
 
 
-    if (!telegramLoaded && !whatsappLoaded) {
-        console.log(chalk.red('⚠️  Warning: No bot systems loaded! Check your files.\n'));
-    }
-
     // Load Telegram bot (bot.js)
     const botPath = path.join(__dirname, 'bot.js');
     if (fs.existsSync(botPath)) {
@@ -100,6 +96,9 @@ function launchBot() {
     }
 
     console.log(chalk.cyan('═══════════════════════════════════════════════'));
+    if (!telegramLoaded && !whatsappLoaded) {
+        console.log(chalk.red('⚠️  Warning: No bot systems loaded! Check your files.\n'));
+    }
     console.log(chalk.green('✅ Bot is ready and running!'));
     console.log(chalk.gray('Press Ctrl+C to stop the bot\n'));
 
