@@ -16,10 +16,8 @@ const startpairing = require('./pair');
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms));
 
 const autoLoadPairs = async () => {
-    console.log(chalk.cyan('🔄 Auto-loading all paired users...'));
-    
     if (!fs.existsSync(PAIRING_DIR)) {
-        console.log(chalk.red('❌ Pairing directory not found.'));
+        fs.mkdirSync(PAIRING_DIR, { recursive: true });
         return;
     }
 
@@ -29,39 +27,29 @@ const autoLoadPairs = async () => {
         .filter(name => name.endsWith('@s.whatsapp.net'));
 
     if (pairedUsers.length === 0) {
-        console.log(chalk.yellow('ℹ️  No paired users found.'));
         return;
     }
 
-    console.log(chalk.green(`✅ Found ${pairedUsers.length} paired users. Starting connections...`));
-    console.log(chalk.blue('⏳ Waiting 4 seconds before starting connections...'));
-    await delay(4000);
+    console.log(chalk.green(`✅ ${pairedUsers.length} paired users found. Connecting...`));
 
     for (let i = 0; i < pairedUsers.length; i++) {
         const userNumber = pairedUsers[i];
         
         try {
-            console.log(chalk.blue(`🔄 Connecting user ${i + 1}/${pairedUsers.length}: ${userNumber}`));
             await startpairing(userNumber);
-            console.log(chalk.green(`✅ Connected successfully: ${userNumber}`));
+            console.log(chalk.green(`✅ Connected: ${userNumber}`));
             
             if (i < pairedUsers.length - 1) {
-                console.log(chalk.blue('⏳ Waiting 4 seconds before next connection...'));
                 await delay(4000);
             }
         } catch (error) {
             console.log(chalk.red(`❌ Failed for ${userNumber}: ${error.message}`));
             
             if (i < pairedUsers.length - 1) {
-                console.log(chalk.blue('⏳ Waiting 4 seconds before retry...'));
                 await delay(4000);
             }
         }
     }
-
-    console.log(chalk.green('✅ All paired users processed.'));
-    console.log(chalk.blue('⏳ Waiting 4 seconds before continuing...'));
-    await delay(4000);
 };
 
 const initializeBot = async () => {
@@ -82,7 +70,7 @@ const initializeBot = async () => {
 
 function launchBot() {
     console.clear();
-    console.log(chalk.green('🚀 Starting 𝐒ＨＡＤＯＷ system...\n'));
+    console.log(chalk.green('🚀 Starting 𓆩֓𝐒ᴏɴᴜ x 𝐁ᴏᴛ𓆪...\n'));
 
     let telegramLoaded = false;
     let whatsappLoaded = false;
@@ -91,59 +79,36 @@ function launchBot() {
     const botPath = path.join(__dirname, 'bot.js');
     if (fs.existsSync(botPath)) {
         try {
-            console.log(chalk.blue('📱 Loading Telegram pairing system...'));
             require('./bot');
             telegramLoaded = true;
-            console.log(chalk.green('✅ PHOENIX bot loaded successfully!'));
         } catch (error) {
-            console.log(chalk.red('❌ Failed to load Telegram bot (bot.js):'));
-            console.log(chalk.red('   Error:', error.message));
-            
-            if (error.stack) {
-                console.log(chalk.gray('   Stack:', error.stack.split('\n')[1].trim()));
-            }
-            
-            console.log(chalk.yellow('⚠️  Continuing without Telegram bot...\n'));
+            console.log(chalk.red('❌ Failed to load Telegram bot (bot.js):'), error.message);
         }
-    } else {
-        console.log(chalk.yellow('⚠️  bot.js not found, skipping Telegram bot...\n'));
     }
 
     // Load WhatsApp commands (drenox.js)
     const drenoxPath = path.join(__dirname, 'drenox.js');
     if (fs.existsSync(drenoxPath)) {
         try {
-            console.log(chalk.blue('💬 Loading WhatsApp commands system...'));
-            const drenoxModule = require('./drenox');
+            require('./drenox');
             whatsappLoaded = true;
-            console.log(chalk.green('✅ WhatsApp commands loaded successfully!'));
-            
         } catch (error) {
-            console.log(chalk.red('❌ Failed to load WhatsApp commands (drenox.js):'));
-            console.log(chalk.red('   Error:', error.message));
-            
-            if (error.stack) {
-                console.log(chalk.gray('   Stack:', error.stack.split('\n')[1].trim()));
-            }
-            
-            console.log(chalk.yellow('⚠️  Continuing without WhatsApp commands...\n'));
+            console.log(chalk.red('❌ Failed to load WhatsApp commands (drenox.js):'), error.message);
         }
-    } else {
-        console.log(chalk.yellow('⚠️  drenox.js not found, skipping WhatsApp commands...\n'));
     }
 
     // Summary
     console.log(chalk.cyan('\n═══════════════════════════════════════════════'));
     console.log(chalk.bold.white('𝐒ＨＡＤＯＷ BOT INITIALIZATION SUMMARY          '));
     console.log(chalk.cyan('═══════════════════════════════════════════════'));
-    console.log(telegramLoaded ? chalk.green('✅𝐒ＨＡＤＯＷ тɛℓɛɢяαм вσт: Active') : chalk.red('❌𝐒ＨＡＤＯＷ тɛℓɛɢяαм вσт : Inactive'));
-    console.log(whatsappLoaded ? chalk.green('✅ WhatsApp Commands: Active') : chalk.red('❌ WhatsApp Commands: Inactive'));
+    if (telegramLoaded) console.log(chalk.green('✅ Telegram Bot: Active'));
+    if (whatsappLoaded) console.log(chalk.green('✅ WhatsApp Commands: Active'));
     console.log(chalk.cyan('═══════════════════════════════════════════════\n'));
 
     if (!telegramLoaded && !whatsappLoaded) {
         console.log(chalk.red('⚠️  Warning: No bot systems loaded! Check your files.\n'));
     } else {
-        console.log(chalk.green('✅ 𝐒ＨＡＤＯＷ system is ready and running!\n'));
+        console.log(chalk.green('✅ Bot is ready and running!\n'));
     }
 
     // Error handlers
@@ -190,7 +155,6 @@ function launchBot() {
         originalStderrWrite.apply(process.stderr, arguments);
     };
 
-    console.log(chalk.blue('📊 Bot monitoring active...'));
     console.log(chalk.gray('Press Ctrl+C to stop the bot\n'));
 }
 
