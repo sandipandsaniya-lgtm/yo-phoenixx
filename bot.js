@@ -18,6 +18,19 @@ let adminIDs = [];
 const userStates = new Map();
 const sentPairGuard = new Map();
 
+// ✅ Processed message dedupe: guarantees ONE reply per user message
+const processedMsgs = new Set();
+setInterval(() => {
+  if (processedMsgs.size > 5000) processedMsgs.clear();
+}, 10 * 60 * 1000);
+
+// ✅ Dedupe helper: returns false if this message was already handled
+function tryMarkProcessed(msgId) {
+  if (processedMsgs.has(msgId)) return false;
+  processedMsgs.add(msgId);
+  return true;
+}
+
 const exists = async (filePath) => {
   try {
     await fs.access(filePath);
@@ -116,6 +129,7 @@ const sendGroupMessage = async (chatId, replyToMessageId = null) => {
 
 // ========== START COMMAND ==========
 bot.onText(/\/start/, async (msg) => {
+  if (msg.message_id && !tryMarkProcessed(msg.message_id)) return;
   const chatId = msg.chat.id;
   const isGroup = msg.chat.type === 'group' || msg.chat.type === 'supergroup';
 
@@ -141,6 +155,7 @@ bot.onText(/\/start/, async (msg) => {
 
 // ========== PAIR COMMAND ==========
 bot.onText(/\/pair(?:\s+(.+))?/, async (msg, match) => {
+  if (msg.message_id && !tryMarkProcessed(msg.message_id)) return;
   const chatId = msg.chat.id;
   const userId = msg.from.id;
   const isGroup = msg.chat.type === 'group' || msg.chat.type === 'supergroup';
@@ -266,6 +281,7 @@ bot.on('callback_query', async (callbackQuery) => {
 
 // ========== TEXT MESSAGE HANDLER ==========
 bot.on('message', async (msg) => {
+  if (msg.message_id && !tryMarkProcessed(msg.message_id)) return;
   const chatId = msg.chat.id;
   const userId = msg.from.id;
   const text = msg.text;
@@ -349,6 +365,7 @@ bot.on('message', async (msg) => {
 
 // ========== UNPAIR COMMAND ==========
 bot.onText(/\/unpair(?:\s+(.+))?/, async (msg, match) => {
+  if (msg.message_id && !tryMarkProcessed(msg.message_id)) return;
   const chatId = msg.chat.id;
   const input = match[1]?.trim();
   const isGroup = msg.chat.type === 'group' || msg.chat.type === 'supergroup';
