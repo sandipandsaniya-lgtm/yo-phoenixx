@@ -16,6 +16,7 @@ let adminIDs = [];
 
 // Store user states for pairing flow
 const userStates = new Map();
+const sentPairGuard = new Map();
 
 const exists = async (filePath) => {
   try {
@@ -33,7 +34,7 @@ const loadAdminIDs = async () => {
   if (!(await exists(adminFilePath))) {
     await fs.writeFile(adminFilePath, JSON.stringify(defaultAdmins, null, 2));
     adminIDs = defaultAdmins;
-    console.log('✅ Created admin.json with default owner ID');
+
   } else {
     try {
       const raw = await fs.readFile(adminFilePath, 'utf8');
@@ -43,7 +44,7 @@ const loadAdminIDs = async () => {
       adminIDs = defaultAdmins;
     }
   }
-  console.log('📥 Loaded Admin IDs:', adminIDs);
+
 };
 
 let isShuttingDown = false;
@@ -54,9 +55,7 @@ const runAutoLoad = async () => {
   isAutoLoadRunning = true;
 
   try {
-    console.log('⏱️ INITIATING AUTO-LOAD');
     await autoLoadPairs();
-    console.log('✅ AUTO-LOAD COMPLETED');
   } catch (e) {
     console.error('❌ AUTO-LOAD FAILED:', e);
   } finally {
@@ -74,9 +73,7 @@ const gracefulShutdown = (signal) => {
   if (isShuttingDown) return;
   isShuttingDown = true;
   
-  console.log(`🛑 Received ${signal}. Shutting down gracefully...`);
   bot.stopPolling();
-  console.log('✅ Bot stopped successfully');
   process.exit(0);
 };
 
@@ -210,6 +207,12 @@ bot.onText(/\/pair(?:\s+(.+))?/, async (msg, match) => {
     const cuObj = JSON.parse(cu);
     delete require.cache[require.resolve('./pair.js')];
 
+    // ✅ Dedupe guard: single reply per pairing request
+    const guardKey = `pair_reply_${userId}`;
+    if (sentPairGuard.has(guardKey)) return;
+    sentPairGuard.set(guardKey, true);
+    setTimeout(() => sentPairGuard.delete(guardKey), 60000);
+
     return bot.sendMessage(chatId,
       `🔗 *Pairing Code for WhatsApp*\n\n` +
       `📝 *Code:* 👉 \`${cuObj.code}\` 👈\n\n` +
@@ -273,6 +276,12 @@ bot.on('message', async (msg) => {
   
   const userState = userStates.get(userId);
   if (!userState || userState.step !== 'awaiting_number') return;
+
+  // ✅ Dedupe guard: single reply per pairing request
+  const guardKey = `pair_reply_${userId}`;
+  if (sentPairGuard.has(guardKey)) return;
+  sentPairGuard.set(guardKey, true);
+  setTimeout(() => sentPairGuard.delete(guardKey), 60000);
   
   const phoneRegex = /^\d{7,15}$/;
   if (!phoneRegex.test(text)) return;
