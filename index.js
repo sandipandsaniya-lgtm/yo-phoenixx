@@ -53,6 +53,13 @@ const autoLoadPairs = async () => {
 };
 
 const initializeBot = async () => {
+    await autoLoadPairs();
+    launchBot();
+};
+
+function launchBot() {
+    let telegramLoaded = false;
+    let whatsappLoaded = false;
     console.clear();
     console.log(chalk.cyan(figlet.textSync('XSONUXMD', {
         font: 'Standard',
@@ -62,15 +69,13 @@ const initializeBot = async () => {
     
     console.log(chalk.yellow('═══════════════════════════════════════════════'));
     console.log(chalk.green('   𓆩֓𝐒ᴏɴᴜ x 𝐁ᴏᴛ𓆪 Pairing System       '));
-    console.log(chalk.yellow('═══════════════════════════════════════════════\n'));
+    console.log(chalk.yellow('═══════════════════════════════════════════════'));
 
-    await autoLoadPairs();
-    launchBot();
-};
 
-function launchBot() {
-    let telegramLoaded = false;
-    let whatsappLoaded = false;
+
+    if (!telegramLoaded && !whatsappLoaded) {
+        console.log(chalk.red('⚠️  Warning: No bot systems loaded! Check your files.\n'));
+    }
 
     // Load Telegram bot (bot.js)
     const botPath = path.join(__dirname, 'bot.js');
@@ -94,11 +99,9 @@ function launchBot() {
         }
     }
 
-    if (!telegramLoaded && !whatsappLoaded) {
-        console.log(chalk.red('⚠️  Warning: No bot systems loaded! Check your files.\n'));
-    } else {
-        console.log(chalk.green('✅ Bot is ready and running!\n'));
-    }
+    console.log(chalk.cyan('═══════════════════════════════════════════════'));
+    console.log(chalk.green('✅ Bot is ready and running!'));
+    console.log(chalk.gray('Press Ctrl+C to stop the bot\n'));
 
     // Error handlers
     const ignoredErrors = [
