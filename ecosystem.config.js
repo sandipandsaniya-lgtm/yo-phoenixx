@@ -1,5 +1,5 @@
 /**
-   * Create By ༒︎ 𝑺𝑯𝑨𝑫𝑶𝑾 ༒︎
+   * Create By 𓆰⟵『🇮🇳』󰣿𝛲𝛨𝛰𝛯𝑁𝛪𝛸𝛸ᝰ.ː»𓆪
    * Contact Me on wa.me/923271054080
 */
 module.exports = {

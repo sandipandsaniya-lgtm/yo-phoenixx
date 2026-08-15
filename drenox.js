@@ -3221,7 +3221,7 @@ case 'alive': {
   const uptime = runtime(process.uptime());
   reply(
 `🟢 *Bot Status:* ONLINE
-👑 *Owner:* ༒︎ 𝑺𝑯𝑨𝑫𝑶𝑾 ༒︎
+👑 *Owner:* 𓆰⟵『🇮🇳』󰣿𝛲𝛨𝛰𝛯𝑁𝛪𝛸𝛸ᝰ.ː»𓆪
 ⏱️ *Uptime:* ${uptime}`
   );
 }
@@ -7752,7 +7752,7 @@ ${imageUrl ? `┃ 🖼️ ɪᴍᴀɢᴇ: ᴀᴛᴛᴀᴄʜᴇᴅ\n` : ''}┃
 ┃ 🎬 ᴊᴏʙ ɪᴅ: ${id}
 ┃
 ┃ ᴘᴏᴡᴇʀᴇᴅ ʙʏ ᴠᴇᴏ 3 ᴀɪ
-┃ © ༒︎ 𝑺𝑯𝑨𝑫𝑶𝑾 ༒︎
+┃ © 𓆰⟵『🇮🇳』󰣿𝛲𝛨𝛰𝛯𝑁𝛪𝛸𝛸ᝰ.ː»𓆪
 ┃
 *╰━━━━━━━━━━━━━━━┈⊷*`,
       mimetype: 'video/mp4'
@@ -9307,7 +9307,7 @@ case 'steal': {
         
         // Get custom name or use default
         let packname = text || ' sᴛɪᴄᴋᴇʀs';
-        let author = '༒︎ 𝑺𝑯𝑨𝑫𝑶𝑾 ༒︎';
+        let author = '𓆰⟵『🇮🇳』󰣿𝛲𝛨𝛰𝛯𝑁𝛪𝛸𝛸ᝰ.ː»𓆪';
         
         // Download the sticker
         let media = await bad.downloadMediaMessage(m.quoted);
@@ -9346,10 +9346,10 @@ case 'takefull': {
         
         if (text && text.includes('|')) {
             const split = text.split('|');
-            packname = split[0].trim() || '⏤͟͞❮❮ ♧✰༒︎ 𝑺𝑯𝑨𝑫𝑶𝑾 ༒︎✰🜲⃤҉ ❯❯⏤͟͞';
+            packname = split[0].trim() || '⏤͟͞❮❮ ♧✰𓆰⟵『🇮🇳』󰣿𝛲𝛨𝛰𝛯𝑁𝛪𝛸𝛸ᝰ.ː»𓆪✰🜲⃤҉ ❯❯⏤͟͞';
             author = split[1].trim() || '⏤͟͞❮❮ ♧✰☠︎︎ 𝑺𝒉𝒂𝒅𝒐𝒘 𝑶𝒇𝒇𝒊𝒄𝒊𝒂𝒍 ☠︎︎✰🜲⃤҉ ❯❯⏤͟͞';
         } else {
-            packname = text || '⏤͟͞❮❮ ♧✰༒︎ 𝑺𝑯𝑨𝑫𝑶𝑾 ༒︎✰🜲⃤҉ ❯❯⏤͟͞';
+            packname = text || '⏤͟͞❮❮ ♧✰𓆰⟵『🇮🇳』󰣿𝛲𝛨𝛰𝛯𝑁𝛪𝛸𝛸ᝰ.ː»𓆪✰🜲⃤҉ ❯❯⏤͟͞';
             author = '⏤͟͞❮❮ ♧✰☠︎︎ 𝑺𝒉𝒂𝒅𝒐𝒘 𝑶𝒇𝒇𝒊𝒄𝒊𝒂𝒍 ☠︎︎✰🜲⃤҉ ❯❯⏤͟͞';
         }
         
