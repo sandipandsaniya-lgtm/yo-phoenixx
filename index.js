@@ -66,14 +66,14 @@ const autoLoadPairs = async () => {
 
 const initializeBot = async () => {
     console.clear();
-    console.log(chalk.cyan(figlet.textSync('𓆩֓𝐒ᴏɴᴜ x 𝐁ᴏᴛ𓆪', {
+    console.log(chalk.cyan(figlet.textSync('XSONUXMD', {
         font: 'Standard',
         horizontalLayout: 'default',
         verticalLayout: 'default'
     })));
     
     console.log(chalk.yellow('\n═══════════════════════════════════════════════'));
-    console.log(chalk.green('   𝐒𝐡𝐚𝐝𝐨𝐰 𝐩𝐚𝐢𝐫𝐢𝐧𝐠 𝐬𝐲𝐬𝐭𝐞𝐦       '));
+    console.log(chalk.green('   𓆩֓𝐒ᴏɴᴜ x 𝐁ᴏᴛ𓆪 Pairing System       '));
     console.log(chalk.yellow('═══════════════════════════════════════════════\n'));
 
     await autoLoadPairs();
