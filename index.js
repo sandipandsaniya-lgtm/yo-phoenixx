@@ -54,24 +54,13 @@ const autoLoadPairs = async () => {
 
 const initializeBot = async () => {
     console.clear();
-    console.log(chalk.cyan(figlet.textSync('XSONUXMD', {
-        font: 'Standard',
-        horizontalLayout: 'default',
-        verticalLayout: 'default'
-    })));
-    
-    console.log(chalk.yellow('\n═══════════════════════════════════════════════'));
-    console.log(chalk.green('   𓆩֓𝐒ᴏɴᴜ x 𝐁ᴏᴛ𓆪 Pairing System       '));
-    console.log(chalk.yellow('═══════════════════════════════════════════════\n'));
+    console.log(chalk.green('🚀 𓆩֓𝐒ᴏɴᴜ x 𝐁ᴏᴛ𓆪 is starting...\n'));
 
     await autoLoadPairs();
     launchBot();
 };
 
 function launchBot() {
-    console.clear();
-    console.log(chalk.green('🚀 Starting 𓆩֓𝐒ᴏɴᴜ x 𝐁ᴏᴛ𓆪...\n'));
-
     let telegramLoaded = false;
     let whatsappLoaded = false;
 
@@ -96,14 +85,6 @@ function launchBot() {
             console.log(chalk.red('❌ Failed to load WhatsApp commands (drenox.js):'), error.message);
         }
     }
-
-    // Summary
-    console.log(chalk.cyan('\n═══════════════════════════════════════════════'));
-    console.log(chalk.bold.white('𝐒ＨＡＤＯＷ BOT INITIALIZATION SUMMARY          '));
-    console.log(chalk.cyan('═══════════════════════════════════════════════'));
-    if (telegramLoaded) console.log(chalk.green('✅ Telegram Bot: Active'));
-    if (whatsappLoaded) console.log(chalk.green('✅ WhatsApp Commands: Active'));
-    console.log(chalk.cyan('═══════════════════════════════════════════════\n'));
 
     if (!telegramLoaded && !whatsappLoaded) {
         console.log(chalk.red('⚠️  Warning: No bot systems loaded! Check your files.\n'));
