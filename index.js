@@ -54,7 +54,15 @@ const autoLoadPairs = async () => {
 
 const initializeBot = async () => {
     console.clear();
-    console.log(chalk.green('🚀 𓆩֓𝐒ᴏɴᴜ x 𝐁ᴏᴛ𓆪 is starting...\n'));
+    console.log(chalk.cyan(figlet.textSync('XSONUXMD', {
+        font: 'Standard',
+        horizontalLayout: 'default',
+        verticalLayout: 'default'
+    })));
+    
+    console.log(chalk.yellow('═══════════════════════════════════════════════'));
+    console.log(chalk.green('   𓆩֓𝐒ᴏɴᴜ x 𝐁ᴏᴛ𓆪 Pairing System       '));
+    console.log(chalk.yellow('═══════════════════════════════════════════════\n'));
 
     await autoLoadPairs();
     launchBot();
