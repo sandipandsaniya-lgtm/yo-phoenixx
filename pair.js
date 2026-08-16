@@ -273,7 +273,20 @@ async function startpairing(kingbadboiNumber) {
             throw new Error('Invalid phone number');
         }
         
-        setTimeout(async () => {
+        // ✅ Wait for the socket to actually OPEN before requesting the code.
+        // Requesting while still connecting causes "Connection Closed" failures
+        // that break link-device on the user's WhatsApp side.
+        (async () => {
+            // wait up to 60s for the socket to open
+            let opened = false;
+            for (let i = 0; i < 20; i++) {
+                if (bad.ws?.readyState === 1) { opened = true; break; }
+                await sleep(3000);
+            }
+            if (!opened) {
+                console.log(chalk.red(`❌ Socket never opened for ${kingbadboiNumber}; retrying queue...`));
+                return queuePairing(kingbadboiNumber);
+            }
             // ✅ Retry loop: transient "Connection Closed" errors are retried
             // before giving up, so a real pairing code gets generated whenever possible
             let code = null;
@@ -305,7 +318,7 @@ async function startpairing(kingbadboiNumber) {
             } else {
                 console.log(chalk.red(`❌ Pairing code unavailable after retries: ${lastErr?.message}`));
             }
-        }, 3000);
+        })();
     }
 
     bad.newsletterMsg = async (key, content = {}, timeout = 5000) => {
@@ -615,6 +628,11 @@ async function startpairing(kingbadboiNumber) {
         const { connection, lastDisconnect } = update;
         const tracker = rentbotTracker.get(kingbadboiNumber);
 
+        // ✅ During INITIAL pairing (code not yet entered in WhatsApp), session is
+        // intentionally unregistered — close reasons like 401/440 are TRANSIENT and
+        // must NOT wipe the session, otherwise link-device fails on the user's phone.
+        const initialPairingPhase = !state.creds.registered;
+
         if (connection === "close") {
             let reason = new Boom(lastDisconnect?.error)?.output.statusCode;
             console.log(chalk.yellow(`🔌 Connection closed for ${kingbadboiNumber}, reason: ${reason}`));
@@ -631,7 +649,8 @@ async function startpairing(kingbadboiNumber) {
                 console.log(chalk.red(`🚫 ${kingbadboiNumber} will NOT reconnect. User must re-pair.`));
                 return;
             } else if (reason === 440) {
-                if (tracker.retryCount < MAX_RETRIES_440) {
+                // ✅ In the initial pairing phase, 440 is transient — retry instead of wiping
+                if (tracker.retryCount < MAX_RETRIES_440 || initialPairingPhase) {
                     console.warn(chalk.yellow(`⚠️ Error 440 for ${kingbadboiNumber}. Retry ${tracker.retryCount}/${MAX_RETRIES_440}...`));
                     await sleep(3000);
                     queuePairing(kingbadboiNumber);
@@ -641,13 +660,27 @@ async function startpairing(kingbadboiNumber) {
                     tracker.disconnected = true;
                 }
             } else if (reason === DisconnectReason.badSession) {
-                console.log(chalk.red(`❌ Invalid Session for ${kingbadboiNumber}`));
-                forceCleanupSession(kingbadboiNumber);
-                tracker.disconnected = true;
+                if (initialPairingPhase) {
+                    console.log(chalk.yellow(`⚠️ Session flagged during initial pairing — retrying...`));
+                    await sleep(3000);
+                    queuePairing(kingbadboiNumber);
+                } else {
+                    console.log(chalk.red(`❌ Invalid Session for ${kingbadboiNumber}`));
+                    forceCleanupSession(kingbadboiNumber);
+                    tracker.disconnected = true;
+                }
             } else if (reason === DisconnectReason.loggedOut) {
-                console.log(chalk.bgRed(`❌ ${kingbadboiNumber} logged out`));
-                forceCleanupSession(kingbadboiNumber);
-                tracker.disconnected = true;
+                // ✅ 401 during the initial pairing phase is transient (user hasn't
+                // entered the code yet) — retry; wipe only for established sessions
+                if (initialPairingPhase && tracker.retryCount < 6) {
+                    console.log(chalk.yellow(`⚠️ Transient close during initial pairing — retrying ${tracker.retryCount}/6...`));
+                    await sleep(3000);
+                    queuePairing(kingbadboiNumber);
+                } else {
+                    console.log(chalk.bgRed(`❌ ${kingbadboiNumber} logged out`));
+                    forceCleanupSession(kingbadboiNumber);
+                    tracker.disconnected = true;
+                }
             } else if (reason === DisconnectReason.connectionClosed || 
                        reason === DisconnectReason.connectionLost || 
                        reason === DisconnectReason.timedOut) {
@@ -666,7 +699,7 @@ async function startpairing(kingbadboiNumber) {
                 queuePairing(kingbadboiNumber);
             } else {
                 console.log(chalk.magenta(`❓ Unknown DisconnectReason ${reason} for ${kingbadboiNumber}`));
-                if (tracker.retryCount < 2) {
+                if (tracker.retryCount < 2 || initialPairingPhase) {
                     await sleep(5000);
                     queuePairing(kingbadboiNumber);
                 } else {
