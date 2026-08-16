@@ -61,7 +61,7 @@ function launchBot() {
     let telegramLoaded = false;
     let whatsappLoaded = false;
     console.clear();
-    console.log(chalk.cyan(figlet.textSync('XSONUXMD', {
+    console.log(chalk.cyan(figlet.textSync('SONUXBOT', {
         font: 'Standard',
         horizontalLayout: 'default',
         verticalLayout: 'default'
