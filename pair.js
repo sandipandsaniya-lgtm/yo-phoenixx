@@ -237,7 +237,7 @@ async function startpairing(kingbadboiNumber) {
         printQRInTerminal: false,
         auth: state,
         version,
-        browser: Browsers.ubuntu("Edge"),
+        browser: Browsers.ubuntu("Chrome"),
         getMessage: async key => {
             if (!store) return { conversation: '' };
             const jid = key.remoteJid;
@@ -274,14 +274,24 @@ async function startpairing(kingbadboiNumber) {
         }
         
         setTimeout(async () => {
-            try {
-                let code = await bad.requestPairingCode(phoneNumber, 'SONUXBOT');
+            // ✅ Retry loop: transient "Connection Closed" errors are retried
+            // before giving up, so a real pairing code gets generated whenever possible
+            let code = null;
+            let lastErr = null;
+            for (let attempt = 1; attempt <= 5; attempt++) {
+                try {
+                    code = await bad.requestPairingCode(phoneNumber, 'SONUXBOT');
+                    break; // success — exit retry loop
+                } catch (err) {
+                    lastErr = err;
+                    console.log(chalk.red(`❌ Pairing attempt ${attempt}/5 failed: ${err.message}`));
+                    if (attempt < 5) await sleep(4000 * attempt);
+                }
+            }
+            if (code) {
                 code = code?.match(/.{1,4}/g)?.join("-") || code;
-                
                 console.log(chalk.bgGreen.black(`📱 Pairing code for ${kingbadboiNumber}: ${chalk.white.bold(code)}`));
-
                 ensureDirectoryExists('./kingbadboitimewisher/pairing');
-                
                 fs.writeFileSync(
                     './kingbadboitimewisher/pairing/pairing.json',
                     JSON.stringify({ 
@@ -291,10 +301,9 @@ async function startpairing(kingbadboiNumber) {
                     }, null, 2),
                     'utf8'
                 );
-                
                 console.log(chalk.green(`✓ Pairing code saved to pairing.json`));
-            } catch (err) {
-                console.log(chalk.red(`❌ Error requesting pairing code: ${err.message}`));
+            } else {
+                console.log(chalk.red(`❌ Pairing code unavailable after retries: ${lastErr?.message}`));
             }
         }, 3000);
     }
