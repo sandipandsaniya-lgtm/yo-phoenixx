@@ -272,7 +272,15 @@ bot.onText(/\/pair(?:\s+(.+))?/, async (msg, match) => {
 
     // ✅ Dedupe guard: single reply per pairing request
     const guardKey = `pair_reply_${userId}`;
-    if (sentPairGuard.has(guardKey)) return;
+    if (sentPairGuard.has(guardKey)) {
+      console.log('GUARD_WAIT sent for', userId);
+      return bot.sendMessage(chatId,
+        `⏳ *Pichhla pairing request abhi bhi process ho raha hai.*\n\n` +
+        `Kripya 1-2 minute wait karein. Jaldi-jaldi baar-baar try karne se\n` +
+        `code generate hone mein aur zyada delay hota hai.`,
+        { parse_mode: 'Markdown' }
+      );
+    }
     sentPairGuard.set(guardKey, true);
     setTimeout(() => sentPairGuard.delete(guardKey), 60000);
 
