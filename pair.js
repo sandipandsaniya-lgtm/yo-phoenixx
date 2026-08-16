@@ -32,7 +32,18 @@ let themeemoji = "😎";
 const chalk = require('chalk')
 const { writeExif, imageToWebp, videoToWebp, writeExifImg, writeExifVid } = require('./allfunc/exif');
 const { isUrl, generateMessageTag, getBuffer, getSizeMedia, fetch } = require('./allfunc/myfunc')
-const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+// ✅ Telegram webhook mode has a closed stdin — creating a readline on it
+// throws EBADF and can crash the process. In Telegram mode the readline is never
+// needed, so we skip it entirely. When running standalone with a real terminal,
+// start with --pairing-code if the rl prompt is ever required.
+let rl = null;
+try {
+  if (process.stdin.isTTY) {
+    rl = readline.createInterface({ input: process.stdin, output: process.stdout });
+  }
+} catch (e) {
+  // stdin unusable (daemon / webhook mode) — skip
+}
 
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
