@@ -1,1 +1,1 @@
-module.exports = { BOT_TOKEN: "8738695990:AAGy6R2QYHe6Ugmjykn_LqWTNXooPL2IHks" };
+module.exports = { BOT_TOKEN: "8810097363:AAGadUZakL_CG0eUbsHKWLIOCSSy0nV2sV4" };
