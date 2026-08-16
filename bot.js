@@ -316,7 +316,7 @@ bot.on('callback_query', async (callbackQuery) => {
 
 // ========== TEXT MESSAGE HANDLER ==========
 bot.on('message', async (msg) => {
-  if (msg.message_id && !tryMarkProcessed(msg.message_id)) return;
+
   const chatId = msg.chat.id;
   const userId = msg.from.id;
   const text = msg.text;
@@ -467,4 +467,4 @@ bot.on('polling_error', async (error) => {
 });
 
 // ✅ Expose bot instance for webhook server tracing
-module.exports = { bot };
+module.exports = { bot, tryMarkProcessed };
