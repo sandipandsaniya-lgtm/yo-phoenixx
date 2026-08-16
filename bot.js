@@ -10,7 +10,15 @@ const { BOT_TOKEN } = require('./token');
 const { autoLoadPairs } = require('./autoload');
 const axios = require("axios")
 
-const bot = new TelegramBot(BOT_TOKEN, { polling: true });
+// ✅ Polling mode: restart:false prevents overlapping getUpdates (409 loop)
+const bot = new TelegramBot(BOT_TOKEN, {
+  polling: {
+    params: { timeout: 30, allowed_updates: [] },
+    interval: 500,
+    autoStart: true,
+    restart: false
+  }
+});
 const adminFilePath = path.join(__dirname, 'kingbadboitimewisher', 'admin.json');
 let adminIDs = [];
 
@@ -414,6 +422,19 @@ bot.onText(/\/unpair(?:\s+(.+))?/, async (msg, match) => {
 });
 
 // ========== POLLING ERROR HANDLER ==========
-bot.on('polling_error', (error) => {
-  console.error('Polling error:', error);
+// ✅ Clean conflict recovery: full stop then restart (avoids overlapping requests)
+let recovering = false;
+bot.on('polling_error', async (error) => {
+  const msg = String(error && error.message || '');
+  if (!recovering && (msg.includes('409') || msg.includes('Conflict'))) {
+    recovering = true;
+    console.error('⚠️ Polling conflict — clean restart in 5s...');
+    await sleep(5000);
+    try { bot.stopPolling(); } catch (e) {}
+    await sleep(2000);
+    try { bot.startPolling({ restart: true }); } catch (e) { console.error('Polling restart failed:', String(e).slice(0, 150)); }
+    recovering = false;
+  } else if (!msg.includes('ECONNRESET') && !msg.includes('ETIMEDOUT')) {
+    console.error('Polling error:', msg.slice(0, 200));
+  }
 });
