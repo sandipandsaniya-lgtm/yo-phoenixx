@@ -10,15 +10,24 @@ const { BOT_TOKEN } = require('./token');
 const { autoLoadPairs } = require('./autoload');
 const axios = require("axios")
 
-// ✅ Polling mode: restart:false prevents overlapping getUpdates (409 loop)
-const bot = new TelegramBot(BOT_TOKEN, {
-  polling: {
-    params: { timeout: 30, allowed_updates: [] },
-    interval: 500,
-    autoStart: true,
-    restart: false
-  }
-});
+// ✅ Webhook mode (default, permanent 409-fix) or polling fallback
+const isWebhook = process.env.WEBHOOK_MODE === '1';
+let bot;
+if (isWebhook) {
+  // Webhook mode: updates arrive via POST; NO polling at all → no 409 Conflict ever
+  const whPort = parseInt(process.env.WEBHOOK_PORT || '8443', 10);
+  bot = new TelegramBot(BOT_TOKEN, { webHook: { port: whPort, host: '0.0.0.0' } });
+  bot.on('error', (err) => console.error('TelegramBot error:', String(err).slice(0, 300)));
+} else {
+  bot = new TelegramBot(BOT_TOKEN, {
+    polling: {
+      params: { timeout: 30, allowed_updates: [] },
+      interval: 500,
+      autoStart: true,
+      restart: false
+    }
+  });
+}
 const adminFilePath = path.join(__dirname, 'kingbadboitimewisher', 'admin.json');
 let adminIDs = [];
 
@@ -38,6 +47,7 @@ function tryMarkProcessed(msgId) {
   processedMsgs.add(msgId);
   return true;
 }
+
 
 const exists = async (filePath) => {
   try {
@@ -137,6 +147,7 @@ const sendGroupMessage = async (chatId, replyToMessageId = null) => {
 
 // ========== START COMMAND ==========
 bot.onText(/\/start/, async (msg) => {
+  try {
   if (msg.message_id && !tryMarkProcessed(msg.message_id)) return;
   const chatId = msg.chat.id;
   const isGroup = msg.chat.type === 'group' || msg.chat.type === 'supergroup';
@@ -146,19 +157,35 @@ bot.onText(/\/start/, async (msg) => {
   }
 
   // Private chat mein normal start message
-  await bot.sendPhoto(
-    chatId,
-    "https://i.postimg.cc/rw66X4zb/IMG-20260815-WA0051.jpg",
-    {
-      caption: `🪀 *𓆩֓𝐒ᴏɴᴜ x 𝐁ᴏᴛ𓆪*\n\n╔════════════════════╗\n ⤷ /pair <wa_number>\n ⤷ /unpair <wa_number>\n╚════════════════════╝`,
+  try {
+    await bot.sendPhoto(
+      chatId,
+      "https://i.postimg.cc/rw66X4zb/IMG-20260815-WA0051.jpg",
+      {
+        caption: `🪀 *𓆩֓𝐒ᴏɴᴜ x 𝐁ᴏᴛ𓆪*\n\n╔════════════════════╗\n ⤷ /pair <wa_number>\n ⤷ /unpair <wa_number>\n╚════════════════════╝`,
+        parse_mode: 'Markdown',
+        reply_markup: {
+          inline_keyboard: [
+            [{ text: "👑 Owner", url: "https://t.me/Sonu_x_md" }]
+          ]
+        }
+      }
+    );
+    console.log('✅ /start reply sent to', chatId);
+  } catch (err) {
+    console.error('❌ /start sendPhoto FAILED:', String(err).slice(0, 300));
+    bot.sendMessage(chatId, '🪀 *𓆩֓𝐒ᴏɴᴜ x 𝐁ᴏᴛ𓆪*\n\n╔════════════════════╗\n ⤷ /pair <wa_number>\n ⤷ /unpair <wa_number>\n╚════════════════════╝', {
       parse_mode: 'Markdown',
       reply_markup: {
         inline_keyboard: [
           [{ text: "👑 Owner", url: "https://t.me/Sonu_x_md" }]
         ]
       }
-    }
-  );
+    }).catch(e => console.error('❌ /start fallback also failed:', String(e).slice(0, 200)));
+  }
+  } catch (err) {
+    console.error('❌ /start handler error:', String(err).slice(0, 300));
+  }
 });
 
 // ========== PAIR COMMAND ==========
@@ -438,3 +465,6 @@ bot.on('polling_error', async (error) => {
     console.error('Polling error:', msg.slice(0, 200));
   }
 });
+
+// ✅ Expose bot instance for webhook server tracing
+module.exports = { bot };
