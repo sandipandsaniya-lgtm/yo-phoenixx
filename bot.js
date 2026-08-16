@@ -250,18 +250,42 @@ bot.onText(/\/pair(?:\s+(.+))?/, async (msg, match) => {
     await bot.sendMessage(chatId, '⏳ *Generating pairing code...*\n\nPlease wait a moment.', { parse_mode: 'Markdown' });
     
     await startpairing(Xreturn);
-    await sleep(4000);
-
-    const pairingFile = path.join(pairingFolder, 'pairing.json');
-    const cu = await fs.readFile(pairingFile, 'utf-8');
-    const cuObj = JSON.parse(cu);
     delete require.cache[require.resolve('./pair.js')];
+
+    // ✅ Wait for a VALID code to be written (never reply with a blank code)
+    const pairingFile = path.join(pairingFolder, 'pairing.json');
+    let cuObj = null;
+    for (let i = 0; i < 20; i++) {
+      await sleep(2000);
+      try {
+        const cu = await fs.readFile(pairingFile, 'utf-8');
+        const parsed = JSON.parse(cu);
+        // Valid only if the file belongs to THIS request AND code is a non-empty string
+        if (parsed.number === Xreturn && parsed.code && String(parsed.code).trim()) {
+          cuObj = parsed;
+          break;
+        }
+      } catch (e) {
+        // file not written yet — keep waiting
+      }
+    }
 
     // ✅ Dedupe guard: single reply per pairing request
     const guardKey = `pair_reply_${userId}`;
     if (sentPairGuard.has(guardKey)) return;
     sentPairGuard.set(guardKey, true);
     setTimeout(() => sentPairGuard.delete(guardKey), 60000);
+
+    // ✅ No valid code after waiting — send a clear error instead of a blank code
+    if (!cuObj) {
+      console.log('PAIR_NO_CODE branch reached for', Xreturn);
+      return bot.sendMessage(chatId,
+        `❌ *Pairing code generate nahi ho paaya.*\n\n` +
+        `Yeh server environment mein WhatsApp connection block hone ki wajah se ho sakta hai.\n` +
+        `Kripya kuch der baad dobara try karein ya owner se sampark karein.`,
+        { parse_mode: 'Markdown' }
+      );
+    }
 
     return bot.sendMessage(chatId,
       `🔗 *Pairing Code for WhatsApp*\n\n` +
