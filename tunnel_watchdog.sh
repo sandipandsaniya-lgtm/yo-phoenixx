@@ -13,6 +13,24 @@ set_webhook() {
   echo >> $LOG
 }
 
+# ---------- second tunnel: Xsonu_md_bot (port 8444 via localhost.run) ----------
+XSONU_TOKEN="8738695990:AAGy6R2QYHe6Ugmjykn_LqWTNXooPL2IHks"
+XSONU_WEBHOOK_PREFIX="/bot$XSONU_TOKEN"
+XSONU_LOG=/tmp/serveo3.log
+ensure_xsonu_tunnel() {
+  if [ -z "$(pgrep -f 'nokey@localhost.run')" ]; then
+    setsid ssh -o StrictHostKeyChecking=no -o ServerAliveInterval=30 -o ServerAliveCountMax=3 -R 80:localhost:8444 nokey@localhost.run > $XSONU_LOG 2>&1 < /dev/null &
+    sleep 12
+  fi
+  local new
+  new=$(grep -o "https://[a-z0-9-]*\.localhost\.run" $XSONU_LOG 2>/dev/null | tail -1)
+  if [ -n "$new" ]; then
+    curl -s --max-time 15 "https://api.telegram.org/bot$XSONU_TOKEN/setWebhook" -d "url=${new}${XSONU_WEBHOOK_PREFIX}" > /dev/null 2>&1
+    echo "$(date) xsonu webhook: $new" >> $LOG
+  fi
+}
+ensure_xsonu_tunnel
+
 while true; do
   # find any active serveo ssh tunnel
   TUN_PID=$(pgrep -f "nokey@serveo.net\|ssh.*serveo.net" | head -1)
